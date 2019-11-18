@@ -1,0 +1,134 @@
+openapi: 3.0.1
+info:
+  description: "Twitter Service"
+  version: "1.0.0"
+  title: "Twitter service"
+  contact:
+    email: "janus.krzysztof@onet.pl"
+paths:
+  /tweets:
+    post:
+      tags:
+        - "Tweets"
+      summary: "Create new tweet"
+      operationId: "create"
+      responses:
+        400:
+          description: "Message of tweet is to short or to long (10-140 chars)"
+  /tweets/{user}/wall:
+    get:
+      tags:
+        - "Tweets"
+      operationId: "wall"
+      summary: "Get only tweets created by user"
+      parameters:
+        - in: path
+          name: user
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tweet'
+  /tweets/{user}/timeline:
+    get:
+      tags:
+        - "Tweets"
+      operationId: "timeline"
+      summary: "Get tweets created by user and subscribers"
+      parameters:
+        - in: path
+          name: user
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tweet'
+  /subscriptions/{subscriber}/{subscribed}:
+    parameters:
+      - in: path
+        name: subscriber
+        description: "User that will subscribe new user"
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: subscribed
+        description: "User that will produce tweets for subscribers"
+        required: true
+        schema:
+          type: string
+    put:
+      summary: "Subscribe user {subscribed}"
+      tags:
+        - "Subscriptions"
+      operationId: subscribe
+      responses:
+        202:
+          description: ACCEPTED
+          content:
+            application/json:
+              schema:
+                type: string
+    delete:
+      tags:
+        - "Subscriptions"
+      summary: "Delete subscriptions"
+      operationId: delete
+      responses:
+        204:
+          description: NO_CONTENT
+  /events/stream:
+    get:
+      summary: "Get live replayable stream of events in twitter"
+      operationId: stream
+      responses:
+        200:
+          description: OK
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/Event'
+
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        name:
+          type: string
+    Tweet:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user:
+          type: object
+          $ref: '#/components/schemas/User'
+        message:
+          type: string
+        createdAt:
+          type: number
+          format: double
+    Event:
+      type: object
+      description: "Generic event"
+      properties:
+        timestamp:
+          type: number
+          format: double
